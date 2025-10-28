@@ -51,22 +51,9 @@ async def start(update, context):
                        (user_id, formatted_time, '', '', '', '', '', ''))
         connect.commit()
         logging.info(f"Создана новая запись для chat_id: {user_id}")
-
-    # Инициируем ответы пользователя
     answers[user_id] = {'question_index': 0, 'answers': []}
     await update.message.reply_text("Привет! Я задам вам несколько вопросов.")
     await ask_next_question(update, user_id)
-
-# async def start(update, context):
-#     user_id = update.effective_user.id
-#     cursor.execute("INSERT INTO users (chat_ID, time, q0, w0, q1, w1, q2, w2) "
-#                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (user_id, formatted_time,
-#                                                        '', '', '', '', '', ''))
-#     connect.commit()
-#     logging.info(f'user_id: {user_id}')
-#     answers[user_id] = {'question_index': 0, 'answers': []}
-#     await update.message.reply_text("Привет! Я задам вам несколько вопросов.")
-#     await ask_next_question(update, user_id)
 
 
 async def ask_next_question(update: Update, user_id: int):
@@ -79,7 +66,6 @@ async def ask_next_question(update: Update, user_id: int):
     else:
         await update.message.reply_text("Спасибо за ответы! Вот что вы мне рассказали:\n" +
                                         "\n".join(f"{q}: {a}" for q, a in zip(answs, answers[user_id]['answers'])))
-
         del answers[user_id]
 
 
@@ -90,17 +76,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     answer = update.message.text
     answers[user_id]['answers'].append(answer)
-    print(f"q{answers[user_id]['question_index']}")
-    print(f"a{answers[user_id]['question_index']}")
-    print(f'{questions[answers[user_id]["question_index"]]}')
-    print(answer)
-    print(user_id)
     cursor.execute(f"UPDATE users SET q{answers[user_id]['question_index']} = ? WHERE chat_ID = ?",
                    (f'{questions[answers[user_id]["question_index"]]}', user_id))
     connect.commit()
     cursor.execute(f"UPDATE users SET w{answers[user_id]['question_index']} = ? WHERE chat_ID = ?",
                    (answer, user_id))
-
     connect.commit()
     answers[user_id]['question_index'] += 1
     await ask_next_question(update, user_id)
